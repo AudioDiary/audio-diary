@@ -38,9 +38,9 @@ export default function AdminPage() {
 
     // Загружаем ответы пользователей
     const { data: aData } = await supabase
-      .from("answers")
-      .select("*, topics(title)") // Join table topics
-      .order("created_at", { ascending: false });
+   .from("admin_answers_view") // <-- Обращаемся к новой View
+   .select("*")
+   .order("created_at", { ascending: false });
     setAnswers(aData || []);
     setLoading(false);
   };
@@ -204,11 +204,11 @@ export default function AdminPage() {
                                 <td className="p-4 text-sm text-gray-500">
                                     {new Date(ans.created_at).toLocaleString('ru-RU')}
                                 </td>
-                                <td className="p-4 font-mono text-xs text-blue-600">
-                                    {ans.user_id.slice(0, 8)}...
+                                <td className="p-4 text-sm text-blue-600 font-medium">
+                                    {ans.user_email}
                                 </td>
                                 <td className="p-4 font-medium">
-                                    {ans.topics?.title || "Удаленная тема"}
+                                    {ans.topic_title || "Удаленная тема"}
                                 </td>
                                 <td className="p-4">
                                     <audio controls src={ans.audio_url} className="h-8 w-60" />
