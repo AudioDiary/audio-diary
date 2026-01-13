@@ -16,10 +16,19 @@ export default function Login() {
     let error;
     
     if (isSignUp) {
-      const res = await supabase.auth.signUp({ email, password });
+      // Регистрация
+      const res = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          // Важно: указываем, куда вернуть пользователя после клика в письме
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
       error = res.error;
-      if (!error) alert('Проверьте почту для подтверждения регистрации!');
+      if (!error) alert('Письмо отправлено! Проверьте почту (включая Спам).');
     } else {
+      // Вход
       const res = await supabase.auth.signInWithPassword({ email, password });
       error = res.error;
       if (!error) router.push('/');
@@ -29,10 +38,33 @@ export default function Login() {
     setLoading(false);
   };
 
+  // --- НОВАЯ ФУНКЦИЯ: Повторная отправка ---
+  const handleResendEmail = async () => {
+    if (!email) {
+      alert("Сначала введите Email в поле выше.");
+      return;
+    }
+    
+    setLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`
+      }
+    });
+
+    if (error) alert("Ошибка: " + error.message);
+    else alert("Письмо отправлено повторно! Проверьте почту.");
+    
+    setLoading(false);
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
         <h2 className="text-2xl font-bold mb-6 text-center">{isSignUp ? 'Регистрация' : 'Вход'}</h2>
+        
         <form onSubmit={handleAuth} className="space-y-4">
           <input
             type="email"
@@ -48,16 +80,30 @@ export default function Login() {
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
-          <button disabled={loading} className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 font-bold">
-            {loading ? 'Загрузка...' : (isSignUp ? 'Зарегистрироваться' : 'Войти')}
+          <button disabled={loading} className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 font-bold transition">
+            {loading ? 'Обработка...' : (isSignUp ? 'Зарегистрироваться' : 'Войти')}
           </button>
         </form>
-        <button 
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="w-full text-center mt-4 text-blue-600 text-sm hover:underline"
-        >
-          {isSignUp ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Создать'}
-        </button>
+
+        <div className="mt-4 flex flex-col gap-2 text-center text-sm">
+          <button 
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-blue-600 hover:underline"
+          >
+            {isSignUp ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Создать'}
+          </button>
+
+          {/* Кнопка повторной отправки (показываем только при регистрации) */}
+          {isSignUp && (
+            <button 
+              onClick={handleResendEmail}
+              className="text-gray-500 hover:text-gray-800 underline mt-2"
+              type="button"
+            >
+              Не пришло письмо? Отправить повторно
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
