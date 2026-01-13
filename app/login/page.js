@@ -2,10 +2,12 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react'; // Импортируем иконки глаза
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // Состояние для показа пароля
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const router = useRouter();
@@ -21,7 +23,6 @@ export default function Login() {
         email, 
         password,
         options: {
-          // Важно: указываем, куда вернуть пользователя после клика в письме
           emailRedirectTo: `${window.location.origin}/`
         }
       });
@@ -38,13 +39,11 @@ export default function Login() {
     setLoading(false);
   };
 
-  // --- НОВАЯ ФУНКЦИЯ: Повторная отправка ---
   const handleResendEmail = async () => {
     if (!email) {
       alert("Сначала введите Email в поле выше.");
       return;
     }
-    
     setLoading(true);
     const { error } = await supabase.auth.resend({
       type: 'signup',
@@ -66,21 +65,36 @@ export default function Login() {
         <h2 className="text-2xl font-bold mb-6 text-center">{isSignUp ? 'Регистрация' : 'Вход'}</h2>
         
         <form onSubmit={handleAuth} className="space-y-4">
+          {/* Поле Email */}
           <input
             type="email"
             placeholder="Email"
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={email}
             onChange={e => setEmail(e.target.value)}
           />
-          <input
-            type="password"
-            placeholder="Пароль"
-            className="w-full p-3 border rounded-lg"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          />
-          <button disabled={loading} className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 font-bold transition">
+          
+          {/* Поле Пароля с глазиком */}
+          <div className="relative">
+            <input
+              // Если showPassword true - показываем текст, иначе - пароль
+              type={showPassword ? "text" : "password"} 
+              placeholder="Пароль"
+              // Добавляем pr-10 (padding-right), чтобы текст не наезжал на иконку
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+            <button
+              type="button" // Важно: type="button", чтобы не отправлялась форма
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+
+          <button disabled={loading} className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 font-bold transition disabled:opacity-70">
             {loading ? 'Обработка...' : (isSignUp ? 'Зарегистрироваться' : 'Войти')}
           </button>
         </form>
@@ -93,7 +107,6 @@ export default function Login() {
             {isSignUp ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Создать'}
           </button>
 
-          {/* Кнопка повторной отправки (показываем только при регистрации) */}
           {isSignUp && (
             <button 
               onClick={handleResendEmail}
