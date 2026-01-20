@@ -1,47 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
-  --background: #fdfaf6; /* Кремовый оттенок бумаги */
-  --foreground: #2c2c2c;
+  --background: #fdfaf6; /* Кремовая бумага */
+  --foreground: #2c2420;
 }
 
 body {
-  color: var(--foreground);
   background-color: var(--background);
-  font-family: var(--font-lora), serif;
-  
-  /* Установка вашего изображения на фон */
-  background-image: url('/background.png'); 
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+/* Класс специально для страницы входа, где нужно дерево */
+.bg-tree-overlay {
+  background-image: url('/background.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
   background-repeat: no-repeat;
 }
 
-h1, h2, h3 {
-  font-family: var(--font-playfair), serif;
-}
-
-/* Эффект матового стекла (Glassmorphism) */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.7); /* Белый фон с прозрачностью 70% */
-  backdrop-filter: blur(12px); /* Размытие фона */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   border-radius: 24px;
-}
-
-/* Кнопка записи (стилизованная под ретро) */
-.record-button {
-  transition: all 0.3s ease;
-  background: #8b4513; /* Цвет дерева/кожи */
-  color: white;
-}
-
-.record-button:hover {
-  transform: scale(1.05);
-  background: #a0522d;
 }
