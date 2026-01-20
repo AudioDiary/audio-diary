@@ -25,14 +25,13 @@ export default function TopicPage() {
     const { data } = await supabase.from('topics').select('*').eq('id', id).single();
     setTopic(data);
     
-    // Проверяем, есть ли уже ответ
-    const { data: session } = await supabase.auth.getSession();
-    if (session?.session) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
       const { data: answer } = await supabase
         .from('answers')
         .select('*')
         .eq('topic_id', id)
-        .eq('user_id', session.session.user.id)
+        .eq('user_id', session.user.id)
         .single();
       
       if (answer) {
@@ -44,118 +43,122 @@ export default function TopicPage() {
   };
 
   const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder.current = new MediaRecorder(stream);
-    audioChunks.current = [];
-
-    mediaRecorder.current.ondataavailable = (e) => {
-      audioChunks.current.push(e.data);
-    };
-
-    mediaRecorder.current.onstop = () => {
-      const audioBlob = new Blob(audioChunks.current, { type: 'audio/mpeg' });
-      setAudioUrl(URL.createObjectURL(audioBlob));
-    };
-
-    mediaRecorder.current.start();
-    setRecording(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder.current = new MediaRecorder(stream);
+      audioChunks.current = [];
+      mediaRecorder.current.ondataavailable = (e) => audioChunks.current.push(e.data);
+      mediaRecorder.current.onstop = () => {
+        const audioBlob = new Blob(audioChunks.current, { type: 'audio/mpeg' });
+        setAudioUrl(URL.createObjectURL(audioBlob));
+      };
+      mediaRecorder.current.start();
+      setRecording(true);
+    } catch (err) {
+      alert("Не удалось получить доступ к микрофону");
+    }
   };
 
   const stopRecording = () => {
-    mediaRecorder.current.stop();
-    setRecording(false);
+    if (mediaRecorder.current) {
+      mediaRecorder.current.stop();
+      setRecording(false);
+    }
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="glass-card p-6 animate-pulse font-header text-amber-900">Открываем главу...</div>
+    <div className="min-h-screen flex items-center justify-center bg-[#fdfaf6]">
+      <div className="glass-card p-6 font-header text-amber-900 animate-pulse">Открываем страницу...</div>
     </div>
   );
 
   return (
-    <main className="min-h-screen p-4 md:p-8 flex flex-col items-center">
+    // bg-[#fdfaf6] перекрывает глобальное фоновое изображение для этой страницы
+    <main className="min-h-screen bg-[#fdfaf6] flex flex-col items-center p-4 md:p-10">
+      
       {/* Кнопка назад */}
-      <div className="w-full max-w-3xl mb-6">
-        <Link href="/" className="text-amber-900/60 hover:text-amber-900 flex items-center gap-2 font-body transition-all">
-          ← Вернуться к списку глав
+      <div className="w-full max-w-[500px] mb-6">
+        <Link href="/" className="inline-flex items-center text-amber-900/60 hover:text-amber-900 transition-colors font-body text-sm">
+          <span className="mr-2">←</span> К списку глав
         </Link>
       </div>
 
-      <div className="glass-card w-full max-w-3xl p-8 md:p-12 shadow-2xl border-white/40 relative overflow-hidden">
-        {/* Декоративный элемент - номер главы */}
-        <div className="absolute top-4 right-8 font-header text-5xl opacity-5 text-amber-900">
-          {topic?.order || "I"}
-        </div>
-
-        <header className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-header text-amber-950 mb-4">
+      {/* Основная карточка интерфейса */}
+      <div className="glass-card w-full max-w-[500px] p-6 md:p-10 flex flex-col items-center shadow-xl border-white/60">
+        
+        <header className="text-center w-full mb-8">
+          <span className="text-[10px] font-bold tracking-[0.2em] text-amber-900/40 uppercase block mb-2">
+            Глава {topic?.order || "I"}
+          </span>
+          <h1 className="text-2xl md:text-3xl font-header text-amber-950 mb-4 leading-tight">
             {topic?.title}
           </h1>
-          <div className="w-24 h-px bg-amber-900/20 mx-auto mb-6"></div>
-          <p className="text-lg font-body italic text-amber-900/80 leading-relaxed">
-            «{topic?.description}»
+          <div className="h-px w-16 bg-amber-900/10 mx-auto mb-4"></div>
+          <p className="text-sm md:text-base font-body italic text-amber-900/70 leading-relaxed px-2">
+            {topic?.description}
           </p>
         </header>
 
-        <section className="flex flex-col items-center gap-8">
-          {/* Визуализатор записи (упрощенный) */}
-          {recording && (
-            <div className="flex gap-1 items-center h-8">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="w-1 bg-amber-700 rounded-full animate-bounce" 
-                     style={{ height: '60%', animationDelay: `${i * 0.1}s` }}></div>
-              ))}
-              <span className="ml-3 text-red-700 font-mono text-sm animate-pulse">ИДЕТ ЗАПИСЬ...</span>
-            </div>
-          )}
+        <div className="w-full flex flex-col items-center gap-6">
+          
+          {/* Индикатор записи */}
+          <div className={`h-6 flex items-center gap-1 transition-opacity duration-300 ${recording ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-ping"></div>
+            <span className="text-[10px] font-bold text-red-600 tracking-widest uppercase">Запись идет</span>
+          </div>
 
-          {/* Кнопка записи в стиле ретро */}
+          {/* Кнопка управления записью */}
           <button
             onClick={recording ? stopRecording : startRecording}
-            className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 shadow-xl ${
+            className={`group relative w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg ${
               recording 
-              ? 'bg-red-50 border-4 border-red-700 scale-110 shadow-red-200' 
-              : 'bg-amber-900 border-4 border-amber-800 hover:scale-105 shadow-amber-900/30'
+              ? 'bg-red-50 border-2 border-red-600 scale-105' 
+              : 'bg-amber-900 border-2 border-amber-800 hover:bg-amber-800 active:scale-95'
             }`}
           >
             {recording ? (
-              <div className="w-8 h-8 bg-red-700 rounded-sm"></div>
+              <div className="w-6 h-6 bg-red-600 rounded-sm shadow-sm"></div>
             ) : (
-              <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[20px] border-l-amber-50 border-b-[12px] border-b-transparent ml-2"></div>
+              <div className="ml-1 w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-amber-50 border-b-[10px] border-b-transparent"></div>
             )}
           </button>
 
-          <p className="text-sm font-body text-amber-900/60 text-center">
-            {recording ? "Нажмите, чтобы завершить рассказ" : "Нажмите и начните говорить"}
+          <p className="text-xs font-body text-amber-900/50 mb-4">
+            {recording ? "Нажмите, чтобы закончить" : "Нажмите, чтобы начать рассказ"}
           </p>
 
-          {/* Блок с результатом (Транскрипт / Аудио) */}
-          {(transcript || audioUrl) && (
-            <div className="w-full mt-8 p-6 rounded-2xl bg-white/40 border border-amber-900/10">
-              <h3 className="font-header text-amber-900 mb-3 uppercase tracking-widest text-xs font-bold">Ваше воспоминание:</h3>
-              
+          {/* Результат: Плеер и Текст */}
+          {(audioUrl || transcript) && (
+            <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {audioUrl && (
-                <audio src={audioUrl} controls className="w-full mb-4 h-10 accent-amber-900" />
+                <div className="p-3 bg-white/50 rounded-2xl border border-amber-900/5">
+                   <audio src={audioUrl} controls className="w-full h-8 accent-amber-900" />
+                </div>
               )}
               
-              <div className="font-body text-amber-950 leading-relaxed whitespace-pre-wrap italic opacity-90">
-                {transcript || "Текст воспоминания скоро появится здесь после обработки..."}
+              <div className="p-5 bg-white/60 rounded-2xl border border-amber-900/5 shadow-inner">
+                <h4 className="text-[10px] font-bold text-amber-900/40 uppercase tracking-widest mb-3 text-center">Ваша история</h4>
+                <div className="text-sm md:text-base font-body text-amber-950/90 leading-relaxed italic text-center">
+                  {transcript || "Ваши слова бережно преобразуются в текст..."}
+                </div>
               </div>
             </div>
           )}
 
+          {/* Кнопка сохранения */}
           <button 
             disabled={!audioUrl || saving}
-            className="mt-4 px-10 py-3 rounded-full bg-amber-900 text-amber-50 font-header text-lg hover:bg-amber-800 transition-all disabled:opacity-30 shadow-lg"
+            className="w-full py-4 mt-4 rounded-full bg-amber-900 text-amber-50 font-header text-lg hover:bg-amber-800 transition-all shadow-md active:scale-[0.98] disabled:opacity-20 disabled:grayscale"
           >
-            {saving ? "Сохраняем в летопись..." : "Сохранить в книгу"}
+            {saving ? "Сохраняем главу..." : "Записать в летопись"}
           </button>
-        </section>
+        </div>
+
       </div>
 
-      <footer className="mt-12 text-amber-900/40 font-body italic text-sm text-center max-w-md">
-        Это воспоминание станет частью истории вашей семьи и будет передано вашим детям и внукам.
-      </footer>
+      <p className="mt-8 text-[10px] text-amber-900/30 font-body uppercase tracking-[0.2em] text-center max-w-[300px]">
+        Это воспоминание будет сохранено для будущих поколений вашей семьи
+      </p>
     </main>
   );
 }
