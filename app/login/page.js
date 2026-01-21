@@ -18,7 +18,7 @@ export default function Login() {
     setError(null);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      setError("Неверный email или пароль");
+      setError("Ошибка входа");
       setLoading(false);
     } else {
       router.push("/");
@@ -26,124 +26,137 @@ export default function Login() {
   };
 
   return (
-    <main 
-      style={{ 
-        minHeight: "100vh", 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "flex-start", // Для работы paddingTop
-        paddingTop: "42vh",       // Положение на уровне начала ствола
-        paddingLeft: "20px", 
-        paddingRight: "20px",
-        paddingBottom: "40px",
-        boxSizing: "border-box",
-        backgroundImage: "url('/background.png')", // Дерево только на этой странице
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed"
-      }}
-    >
-      {/* Матовый прямоугольник (Карточка) */}
-      <div 
-        style={{
-          width: "100%",
-          maxWidth: "310px",           // Изящная узкая форма под ствол
-          backgroundColor: "rgba(253, 250, 246, 0.92)", // Плотная кремовая бумага
-          backdropFilter: "blur(10px)",
-          border: "1px solid rgba(139, 69, 19, 0.2)",
-          borderRadius: "24px",
-          padding: "40px",             // Увеличенные внутренние отступы
-          boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
-          boxSizing: "border-box",     // Чтобы паддинги не расширяли форму
-          color: "#2c2420",
-          textAlign: "center"          // Центрирование заголовков
-        }}
-      >
-        <div style={{ marginBottom: "25px" }}>
-          <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: "22px", margin: "0 0 8px 0" }}>
+    <main className="login-container">
+      <style jsx>{`
+        .login-container {
+          min-height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          padding-left: 20px;
+          padding-right: 20px;
+          padding-bottom: 50px;
+          box-sizing: border-box;
+          
+          /* Фон: всегда видим картинку целиком */
+          background-image: url('/background.png');
+          background-repeat: no-repeat;
+          background-position: center top;
+          background-size: 100% auto;
+          background-attachment: scroll;
+          background-color: #f2eedf;
+        }
+
+        /* Позиционирование формы точно "в дерево" */
+        @media (min-width: 769px) {
+          .login-container {
+            /* 44vw — это точка начала ствола на большинстве мониторов для этой картинки */
+            padding-top: 37vw; 
+          }
+        }
+
+        @media (max-width: 768px) {
+          .login-container {
+            /* На мобильных дерево визуально ниже из-за узкого экрана */
+            padding-top: 80vw; 
+          }
+        }
+
+        .glass-box {
+          width: 100%;
+          /* Сужаем форму до 260px, чтобы она вписалась в границы ствола */
+          max-width: 260px; 
+          background-color: rgba(253, 250, 246, 0.95);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(139, 69, 19, 0.15);
+          border-radius: 20px;
+          padding: 30px 20px;
+          box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+          box-sizing: border-box;
+          text-align: center;
+        }
+
+        .input-field {
+          width: 100%;
+          padding: 10px;
+          border-radius: 10px;
+          border: 1px solid rgba(139, 69, 19, 0.2);
+          background: white;
+          font-size: 14px;
+          text-align: center;
+          outline: none;
+          box-sizing: border-box;
+        }
+
+        .login-btn {
+          width: 100%;
+          padding: 12px;
+          border-radius: 40px;
+          background-color: #5d4037;
+          color: white;
+          border: none;
+          font-size: 15px;
+          font-weight: bold;
+          cursor: pointer;
+          font-family: var(--font-playfair), serif;
+          margin-top: 10px;
+        }
+      `}</style>
+
+      <div className="glass-box">
+        <div style={{ marginBottom: "20px" }}>
+          <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: "20px", margin: "0 0 5px 0", color: "#4e342e" }}>
             Вход в Летопись
           </h2>
-          <p style={{ fontSize: "12px", fontStyle: "italic", opacity: 0.7, margin: 0 }}>
-            Продолжите историю семьи
+          <p style={{ fontSize: "11px", fontStyle: "italic", opacity: 0.6, margin: 0 }}>
+            История вашей семьи
           </p>
         </div>
 
-        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
           
-          {/* Блок Email */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{ 
-              fontSize: "10px", 
-              fontWeight: "bold", 
-              letterSpacing: "0.15em", 
-              opacity: 0.6,
-              textAlign: "center" // Центрирование названия поля
-            }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+            <label style={{ fontSize: "9px", fontWeight: "bold", letterSpacing: "0.1em", opacity: 0.5 }}>
               ЭЛЕКТРОННАЯ ПОЧТА
             </label>
             <input
               type="email"
+              className="input-field"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@example.com"
               required
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "12px",
-                border: "1px solid rgba(139, 69, 19, 0.2)",
-                backgroundColor: "white",
-                fontSize: "14px",
-                boxSizing: "border-box", // Гарантия вписывания в ширину
-                textAlign: "center",    // Текст и курсор по центру
-                outline: "none"
-              }}
             />
           </div>
 
-          {/* Блок Пароль */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{ 
-              fontSize: "10px", 
-              fontWeight: "bold", 
-              letterSpacing: "0.15em", 
-              opacity: 0.6,
-              textAlign: "center" // Центрирование названия поля
-            }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+            <label style={{ fontSize: "9px", fontWeight: "bold", letterSpacing: "0.1em", opacity: 0.5 }}>
               ПАРОЛЬ
             </label>
-            <div style={{ position: "relative", width: "100%", boxSizing: "border-box" }}>
+            <div style={{ position: "relative" }}>
               <input
                 type={showPassword ? "text" : "password"}
+                className="input-field"
+                style={{ paddingRight: "35px" }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                style={{
-                  width: "100%",
-                  padding: "12px 40px 12px 40px",
-                  borderRadius: "12px",
-                  border: "1px solid rgba(139, 69, 19, 0.2)",
-                  backgroundColor: "white",
-                  fontSize: "14px",
-                  boxSizing: "border-box", // Гарантия вписывания в ширину
-                  textAlign: "center",    // Текст и курсор по центру
-                  outline: "none"
-                }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: "absolute",
-                  right: "10px",
+                  right: "8px",
                   top: "50%",
                   transform: "translateY(-50%)",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "16px",
-                  opacity: 0.4
+                  fontSize: "14px",
+                  opacity: 0.3
                 }}
               >
                 {showPassword ? "👁️" : "👁️‍🗨️"}
@@ -151,42 +164,17 @@ export default function Login() {
             </div>
           </div>
 
-          {error && (
-            <div style={{ color: "#b91c1c", fontSize: "11px", backgroundColor: "#fef2f2", padding: "8px", borderRadius: "8px" }}>
-              {error}
-            </div>
-          )}
+          {error && <div style={{ color: "#b91c1c", fontSize: "10px" }}>{error}</div>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "14px",
-              marginTop: "5px",
-              borderRadius: "50px",
-              backgroundColor: "#5d4037",
-              color: "#fdfaf6",
-              border: "none",
-              fontSize: "16px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              fontFamily: "var(--font-playfair), serif",
-              boxShadow: "0 4px 15px rgba(93, 64, 55, 0.2)"
-            }}
-          >
-            {loading ? "Загрузка..." : "Войти в архив"}
+          <button type="submit" disabled={loading} className="login-btn">
+            {loading ? "Загрузка..." : "Войти"}
           </button>
         </form>
 
-        <div style={{ marginTop: "25px", paddingTop: "20px", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
-          <p style={{ fontSize: "12px", opacity: 0.8 }}>
-            Впервые здесь?{" "}
-            <Link 
-              href="/signup" 
-              style={{ color: "#5d4037", fontWeight: "bold", textDecoration: "none" }}
-            >
-              Создать летопись
+        <div style={{ marginTop: "20px", paddingTop: "15px", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
+          <p style={{ fontSize: "11px", opacity: 0.7 }}>
+            <Link href="/signup" style={{ color: "#5d4037", fontWeight: "bold", textDecoration: "none" }}>
+              Создать свою летопись
             </Link>
           </p>
         </div>
